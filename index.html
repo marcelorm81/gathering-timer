@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gathering Roulette</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Gathering Roulette</h1>
+      <p class="subtitle">5 min per speaker &bull; 1h 30m session</p>
+    </header>
+
+    <div class="main-layout">
+      <!-- Left: Wheel Section -->
+      <div class="wheel-section">
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheel" width="400" height="400"></canvas>
+        </div>
+        <button id="spin-btn" class="neu-btn spin-btn">SPIN</button>
+        <div class="spin-info" id="spin-info"></div>
+      </div>
+
+      <!-- Right: Presenter Queue -->
+      <div class="queue-section">
+        <div class="queue-header">
+          <h2>Presenter Queue</h2>
+          <span class="queue-time" id="queue-time">0 / 90 min</span>
+        </div>
+        <ul id="presenter-list" class="presenter-list"></ul>
+        <div class="queue-actions">
+          <button id="start-btn" class="neu-btn start-btn" disabled>START PRESENTATIONS</button>
+          <button id="reset-btn" class="neu-btn reset-btn">RESET</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Presentation Mode Overlay -->
+    <div id="presentation-overlay" class="presentation-overlay hidden">
+      <div class="presentation-card">
+        <div class="presenter-badge" id="current-presenter-name">—</div>
+        <div class="timer-ring">
+          <svg viewBox="0 0 200 200">
+            <circle class="timer-bg" cx="100" cy="100" r="90"/>
+            <circle class="timer-progress" id="timer-progress" cx="100" cy="100" r="90"/>
+          </svg>
+          <div class="timer-text" id="timer-text">5:00</div>
+        </div>
+        <div class="timer-status" id="timer-status"></div>
+        <div class="presentation-controls">
+          <button id="skip-btn" class="neu-btn">SKIP</button>
+          <button id="pause-btn" class="neu-btn">PAUSE</button>
+          <button id="stop-presentations-btn" class="neu-btn stop-btn">STOP ALL</button>
+        </div>
+        <div class="up-next" id="up-next"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
