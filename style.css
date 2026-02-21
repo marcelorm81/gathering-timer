@@ -509,6 +509,14 @@ body {
     padding: 0 0 20px;
   }
 
+  /* — Reorder elements for mobile flow — */
+  .header     { order: 1; }
+  .spin-info  { order: 2; }
+  .wheel-center { order: 3; }
+  .spin-area  { order: 4; }
+  .queue-panel { order: 5; }
+  .action-bar { order: 6; }
+
   /* — Header: centered, generous top space — */
   .header {
     position: relative;
@@ -516,6 +524,16 @@ body {
     left: auto;
     padding: 48px 20px 0;
     text-align: center;
+  }
+
+  /* — Spin info — right under the title — */
+  .spin-info {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    text-align: center;
+    padding: 8px 0 0;
   }
 
   /* — Wheel: centered, large, big breathing room — */
@@ -526,7 +544,7 @@ body {
     transform: none;
     display: flex;
     justify-content: center;
-    padding: 40px 20px 36px;
+    padding: 48px 20px 48px;
   }
 
   .wheel-wrapper, .wheel-outer {
@@ -566,23 +584,13 @@ body {
     padding: 16px 32px;
   }
 
-  /* — Spin info — */
-  .spin-info {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    transform: none;
-    text-align: center;
-    padding: 12px 0 36px;
-  }
-
-  /* — Queue panel — */
+  /* — Queue panel — reduced gap to spin button — */
   .queue-panel {
     position: relative;
     top: auto;
     right: auto;
     width: 100%;
-    padding: 0 24px 36px;
+    padding: 16px 24px 36px;
   }
 
   .presenter-list {
@@ -618,14 +626,14 @@ body {
 
   .pres-card {
     width: 100%;
-    min-height: 300px;
+    min-height: 75vh;
     padding: 40px 28px 32px;
     border-radius: 24px;
     gap: 12px;
-    /* Raised neumorphic on mobile, not inset */
+    /* Inward bevel neumorphic on mobile */
     box-shadow:
-      8px 8px 16px var(--shadow-d),
-      -8px -8px 16px var(--shadow-l);
+      inset 6px 6px 14px var(--shadow-d),
+      inset -6px -6px 14px var(--shadow-l);
   }
 
   .pres-name {
@@ -683,7 +691,7 @@ body {
   }
 
   .wheel-center {
-    padding: 36px 20px 32px;
+    padding: 40px 20px 40px;
   }
 
   .wheel-wrapper, .wheel-outer {
