@@ -606,20 +606,23 @@ body {
     overflow: visible;
   }
 
-  /* — Action bar — tight to queue, aligned with spin button edges — */
+  /* — Action bar — same width as spin button — */
   .action-bar {
     position: relative;
     bottom: auto;
     right: auto;
+    display: flex;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
     padding: 4px 40px 32px;
     width: 100%;
   }
 
   .action-bar .bottom-btn {
     flex: 1;
-    padding: 14px 24px;
+    min-width: 0;
+    padding: 14px 0;
+    text-align: center;
   }
 
   /* — Presentation overlay — mobile — */
@@ -732,6 +735,7 @@ body {
 
   .action-bar {
     padding: 4px 28px 28px;
+    gap: 10px;
   }
 
   .pres-card {
