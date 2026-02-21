@@ -12,7 +12,7 @@
   --green: #27ae60;
   --amber: #d4a035;
   --amber-dark: #b8862e;
-  --mono: 'JetBrains Mono', 'Space Mono', 'SF Mono', 'Fira Code', monospace;
+  --mono: 'Kode Mono', 'SF Mono', 'Fira Code', monospace;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -584,13 +584,18 @@ body {
     padding: 16px 32px;
   }
 
-  /* — Queue panel — reduced gap to spin button — */
+  /* — Queue panel — pushed to bottom, aligned with spin button edges — */
   .queue-panel {
     position: relative;
     top: auto;
     right: auto;
     width: 100%;
-    padding: 16px 24px 36px;
+    padding: 16px 40px 12px;
+    margin-top: auto;
+  }
+
+  .queue-header {
+    margin-bottom: 12px;
   }
 
   .presenter-list {
@@ -598,14 +603,14 @@ body {
     gap: 12px;
   }
 
-  /* — Action bar — */
+  /* — Action bar — tight to queue, aligned with spin button edges — */
   .action-bar {
     position: relative;
     bottom: auto;
     right: auto;
     justify-content: center;
     gap: 16px;
-    padding: 8px 40px 56px;
+    padding: 0 40px 40px;
     width: 100%;
   }
 

@@ -190,10 +190,10 @@ function drawWheel(angleDeg, highlightIdx) {
 
     if (highlightIdx !== undefined && i === highlightIdx) {
       c.fillStyle = '#d4a035';
-      c.font = `700 ${fontSize}px 'JetBrains Mono', monospace`;
+      c.font = `700 ${fontSize}px 'Kode Mono', monospace`;
     } else {
       c.fillStyle = '#444';
-      c.font = `500 ${fontSize}px 'JetBrains Mono', monospace`;
+      c.font = `500 ${fontSize}px 'Kode Mono', monospace`;
     }
 
     c.fillText(NAMES[i], r - labelPad, 0);
