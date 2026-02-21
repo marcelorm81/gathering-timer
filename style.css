@@ -388,12 +388,16 @@ body {
 }
 
 .pres-clock {
-  font-size: 80px;
+  font-size: 160px;
   font-weight: 300;
   color: var(--amber);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pres-status {
@@ -653,8 +657,8 @@ body {
   }
 
   .pres-clock {
-    font-size: 64px;
-    letter-spacing: 2px;
+    font-size: 120px;
+    letter-spacing: 3px;
   }
 
   .pres-status {
@@ -748,7 +752,8 @@ body {
   }
 
   .pres-clock {
-    font-size: 52px;
+    font-size: 96px;
+    letter-spacing: 2px;
   }
 
   .pres-ctrl-btn {
