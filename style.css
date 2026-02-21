@@ -427,7 +427,7 @@ body {
   min-height: 20px;
   letter-spacing: 1px;
   font-weight: 400;
-  margin-top: -12px;
+  margin-top: 8px;
 }
 
 /* -- Bottom area: controls + progress bar -- */
@@ -509,16 +509,16 @@ body {
     padding: 0 0 20px;
   }
 
-  /* — Header: centered — */
+  /* — Header: centered, generous top space — */
   .header {
     position: relative;
     top: auto;
     left: auto;
-    padding: 32px 20px 0;
+    padding: 48px 20px 0;
     text-align: center;
   }
 
-  /* — Wheel: centered, smaller, with padding for shadow — */
+  /* — Wheel: centered, large, big breathing room — */
   .wheel-center {
     position: relative;
     top: auto;
@@ -526,12 +526,12 @@ body {
     transform: none;
     display: flex;
     justify-content: center;
-    padding: 32px 20px 24px;
+    padding: 40px 20px 36px;
   }
 
   .wheel-wrapper, .wheel-outer {
-    width: min(68vw, 280px);
-    height: min(68vw, 280px);
+    width: min(78vw, 340px);
+    height: min(78vw, 340px);
   }
 
   /* Ensure shadow renders + canvas stays inside ring */
@@ -545,38 +545,44 @@ body {
   }
 
   .wheel-pointer::after {
-    border-left-width: 9px;
-    border-right-width: 9px;
-    border-top-width: 20px;
+    border-left-width: 10px;
+    border-right-width: 10px;
+    border-top-width: 22px;
   }
 
-  /* — Spin area: centered below wheel — */
+  /* — Spin area: wide button, space below wheel — */
   .spin-area {
     position: relative;
     bottom: auto;
     left: auto;
     display: flex;
     justify-content: center;
-    padding: 0 0 8px;
+    width: 100%;
+    padding: 0 40px;
   }
 
-  /* — Spin info: centered below spin button — */
+  .spin-area .spin-btn {
+    width: 100%;
+    padding: 16px 32px;
+  }
+
+  /* — Spin info — */
   .spin-info {
     position: relative;
     bottom: auto;
     left: auto;
     transform: none;
     text-align: center;
-    padding: 8px 0 28px;
+    padding: 12px 0 36px;
   }
 
-  /* — Queue panel: full width — */
+  /* — Queue panel — */
   .queue-panel {
     position: relative;
     top: auto;
     right: auto;
     width: 100%;
-    padding: 0 24px 32px;
+    padding: 0 24px 36px;
   }
 
   .presenter-list {
@@ -584,39 +590,105 @@ body {
     gap: 12px;
   }
 
-  /* — Action bar: centered at bottom — */
+  /* — Action bar — */
   .action-bar {
     position: relative;
     bottom: auto;
     right: auto;
     justify-content: center;
-    padding: 8px 20px 48px;
+    gap: 16px;
+    padding: 8px 40px 56px;
+    width: 100%;
   }
 
-  /* — Presentation overlay responsive — */
+  .action-bar .bottom-btn {
+    flex: 1;
+    padding: 14px 24px;
+  }
+
+  /* — Presentation overlay — mobile — */
+  .pres-layout {
+    padding: 0;
+  }
+
+  .pres-center {
+    gap: 0;
+    padding: 0 24px;
+  }
+
   .pres-card {
-    width: 90vw;
-    min-height: 260px;
-    padding: 32px 28px;
-  }
-
-  .pres-controls {
-    width: 90vw;
+    width: 100%;
+    min-height: 300px;
+    padding: 40px 28px 32px;
+    border-radius: 24px;
+    gap: 12px;
+    /* Raised neumorphic on mobile, not inset */
+    box-shadow:
+      8px 8px 16px var(--shadow-d),
+      -8px -8px 16px var(--shadow-l);
   }
 
   .pres-name {
-    font-size: 24px;
+    font-size: 22px;
+    letter-spacing: 2px;
   }
 
   .pres-clock {
-    font-size: 56px;
+    font-size: 64px;
+    letter-spacing: 2px;
+  }
+
+  .pres-status {
+    font-size: 11px;
+  }
+
+  .pres-up-next {
+    font-size: 11px;
+    margin-top: 12px;
+  }
+
+  .pres-bottom {
+    padding: 0 24px;
+  }
+
+  .pres-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+
+  /* Skip + Pause side by side */
+  .pres-ctrl-btn {
+    flex: 1;
+    min-width: calc(50% - 8px);
+    padding: 14px 20px;
+    font-size: 12px;
+  }
+
+  /* Stop All full width */
+  .pres-ctrl-btn.stop-btn {
+    flex-basis: 100%;
+  }
+
+  /* Next button full width when visible */
+  .pres-ctrl-btn.next-btn {
+    flex-basis: 100%;
   }
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: 40px 20px 0;
+  }
+
+  .wheel-center {
+    padding: 36px 20px 32px;
+  }
+
   .wheel-wrapper, .wheel-outer {
-    width: min(65vw, 250px);
-    height: min(65vw, 250px);
+    width: min(75vw, 300px);
+    height: min(75vw, 300px);
   }
 
   .wheel-outer {
@@ -628,27 +700,28 @@ body {
       inset -3px -3px 6px var(--shadow-l);
   }
 
-  .pres-card {
-    width: 92vw;
-    min-height: 220px;
-    padding: 24px 20px;
+  .spin-area {
+    padding: 0 32px;
   }
 
-  .pres-controls {
-    width: 92vw;
-    flex-wrap: wrap;
+  .action-bar {
+    padding: 8px 32px 48px;
+  }
+
+  .pres-card {
+    padding: 32px 24px 28px;
   }
 
   .pres-name {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .pres-clock {
-    font-size: 44px;
+    font-size: 52px;
   }
 
   .pres-ctrl-btn {
-    padding: 10px 20px;
+    padding: 12px 16px;
     font-size: 11px;
   }
 }
