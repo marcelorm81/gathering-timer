@@ -516,12 +516,12 @@ body {
   .queue-panel { order: 5; }
   .action-bar { order: 6; }
 
-  /* — Header: centered, generous top space — */
+  /* — Header: centered — */
   .header {
     position: relative;
     top: auto;
     left: auto;
-    padding: 48px 20px 0;
+    padding: 32px 20px 0;
     text-align: center;
   }
 
@@ -535,7 +535,7 @@ body {
     padding: 8px 0 0;
   }
 
-  /* — Wheel: centered, large — */
+  /* — Wheel: flex:1 to fill space and center vertically between title and spin — */
   .wheel-center {
     position: relative;
     top: auto;
@@ -543,7 +543,9 @@ body {
     transform: none;
     display: flex;
     justify-content: center;
-    padding: 32px 20px 28px;
+    align-items: center;
+    flex: 1;
+    padding: 16px 20px;
   }
 
   .wheel-wrapper, .wheel-outer {
@@ -567,7 +569,7 @@ body {
     border-top-width: 22px;
   }
 
-  /* — Spin area: wide button, space below wheel — */
+  /* — Spin area: wide button at bottom — */
   .spin-area {
     position: relative;
     bottom: auto;
@@ -576,6 +578,7 @@ body {
     justify-content: center;
     width: 100%;
     padding: 0 40px;
+    margin-bottom: 15px;
   }
 
   .spin-area .spin-btn {
@@ -583,14 +586,13 @@ body {
     padding: 16px 32px;
   }
 
-  /* — Queue panel — pushed to bottom, aligned with spin button edges — */
+  /* — Queue panel — 15px below spin, aligned with spin button edges — */
   .queue-panel {
     position: relative;
     top: auto;
     right: auto;
     width: 100%;
-    padding: 12px 40px 8px;
-    margin-top: auto;
+    padding: 0 40px 6px;
   }
 
   .queue-header {
@@ -611,7 +613,7 @@ body {
     right: auto;
     justify-content: center;
     gap: 16px;
-    padding: 4px 40px 36px;
+    padding: 4px 40px 32px;
     width: 100%;
   }
 
@@ -694,11 +696,11 @@ body {
 
 @media (max-width: 480px) {
   .header {
-    padding: 36px 20px 0;
+    padding: 28px 20px 0;
   }
 
   .wheel-center {
-    padding: 28px 20px 24px;
+    padding: 12px 20px;
   }
 
   .wheel-wrapper, .wheel-outer {
@@ -717,10 +719,11 @@ body {
 
   .spin-area {
     padding: 0 28px;
+    margin-bottom: 15px;
   }
 
   .queue-panel {
-    padding: 12px 28px 8px;
+    padding: 0 28px 6px;
   }
 
   .presenter-list {
@@ -728,7 +731,7 @@ body {
   }
 
   .action-bar {
-    padding: 4px 28px 32px;
+    padding: 4px 28px 28px;
   }
 
   .pres-card {
