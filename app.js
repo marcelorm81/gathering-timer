@@ -1,423 +1,458 @@
-// === CONSTANTS ===
-const NAMES = ['Shane', 'David', 'Miriam', 'Miguel', 'Andros', 'Lia', 'Greta', 'Jonas', 'Chris', 'Marcelo'];
-const SLOT_DURATION = 5; // minutes per presenter
-const SESSION_DURATION = 90; // total session in minutes
-const MAX_PRESENTERS = SESSION_DURATION / SLOT_DURATION; // 18 slots
-
-const COLORS = [
-  '#6c63ff', '#ff6b6b', '#51cf66', '#ffc107',
-  '#4dabf7', '#e599f7', '#ff922b', '#20c997',
-  '#f06595', '#845ef7'
-];
+// === CONFIG ===
+const NAMES = ['Shane', 'David', 'Miriam', 'Miguel', 'Andros', 'Lia', 'Greta', 'Jonas', 'Chris', 'Marcelo', 'Petter'];
+const SLOT_MIN = 5;
+const SESSION_MIN = 90;
+const MAX_SLOTS = SESSION_MIN / SLOT_MIN;
 
 // === AUDIO ===
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-
-function ensureAudioCtx() {
-  if (!audioCtx) audioCtx = new AudioCtx();
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
 
-function playTone(freq, duration, type = 'sine', volume = 0.3) {
-  const ctx = ensureAudioCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, ctx.currentTime);
-  gain.gain.setValueAtTime(volume, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+function beep(freq, ms, wave = 'sine', vol = 0.25) {
+  const ac = getAudioCtx();
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = wave;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + ms / 1000);
+  osc.connect(gain).connect(ac.destination);
   osc.start();
-  osc.stop(ctx.currentTime + duration);
+  osc.stop(ac.currentTime + ms / 1000);
 }
 
-function playWarningSound() {
-  playTone(880, 0.15, 'sine', 0.25);
-  setTimeout(() => playTone(880, 0.15, 'sine', 0.25), 200);
-  setTimeout(() => playTone(880, 0.15, 'sine', 0.25), 400);
-}
-
-function playDoneSound() {
-  playTone(523, 0.2, 'square', 0.2);
-  setTimeout(() => playTone(659, 0.2, 'square', 0.2), 200);
-  setTimeout(() => playTone(784, 0.4, 'square', 0.2), 400);
-}
-
-function playTickSound() {
-  playTone(1200, 0.03, 'sine', 0.08);
-}
-
-function playSelectSound() {
-  playTone(600, 0.15, 'sine', 0.2);
-  setTimeout(() => playTone(900, 0.25, 'sine', 0.2), 150);
-}
+const sound = {
+  tick:    () => beep(1200, 30, 'sine', 0.06),
+  select:  () => { beep(600, 150); setTimeout(() => beep(900, 250), 150); },
+  warning: () => { beep(880, 150); setTimeout(() => beep(880, 150), 200); setTimeout(() => beep(880, 150), 400); },
+  done:    () => { beep(523, 200, 'square', 0.15); setTimeout(() => beep(659, 200, 'square', 0.15), 200); setTimeout(() => beep(784, 400, 'square', 0.15), 400); }
+};
 
 // === STATE ===
-let shufflePool = [];
-let presenterQueue = [];
-let isSpinning = false;
-let currentRotation = 0;
+let pool = [];
+let queue = [];
+let spinning = false;
+let wheelAngleDeg = 0;
 
-// Presentation state
-let presentationIndex = 0;
-let timerInterval = null;
-let timeRemaining = 0;
-let isPaused = false;
-let warningPlayed = false;
+let timerIdx = 0;
+let timerSec = 0;
+let timerRef = null;
+let paused = false;
+let warned = false;
 
-// === DOM REFS ===
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const spinBtn = document.getElementById('spin-btn');
-const spinInfo = document.getElementById('spin-info');
-const presenterList = document.getElementById('presenter-list');
-const queueTime = document.getElementById('queue-time');
-const startBtn = document.getElementById('start-btn');
-const resetBtn = document.getElementById('reset-btn');
-const overlay = document.getElementById('presentation-overlay');
-const currentPresenterName = document.getElementById('current-presenter-name');
-const timerText = document.getElementById('timer-text');
-const timerProgress = document.getElementById('timer-progress');
-const timerStatus = document.getElementById('timer-status');
-const skipBtn = document.getElementById('skip-btn');
-const pauseBtn = document.getElementById('pause-btn');
-const stopBtn = document.getElementById('stop-presentations-btn');
-const upNext = document.getElementById('up-next');
+// === DOM ===
+const $ = id => document.getElementById(id);
+const canvas = $('wheel-canvas');
+const c = canvas.getContext('2d');
+const spinBtn   = $('spin-btn');
+const spinInfo  = $('spin-info');
+const listEl    = $('presenter-list');
+const timeEl    = $('queue-time');
+const startBtn  = $('start-btn');
+const resetBtn  = $('reset-btn');
+const overlay   = $('presentation-overlay');
+const nameEl    = $('current-presenter-name');
+const timerTextEl = $('timer-text');
+const statusEl  = $('timer-status');
+const progressBar = $('timer-progress-bar');
+const skipBtn   = $('skip-btn');
+const pauseBtn  = $('pause-btn');
+const stopBtn   = $('stop-btn');
+const nextBtn   = $('next-btn');
+const nextEl    = $('up-next');
 
-// === SHUFFLE POOL (fair selection) ===
-function refillPool() {
-  const pool = [...NAMES];
-  // Fisher-Yates shuffle
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  // Ensure last selected isn't first in new pool
-  if (presenterQueue.length > 0) {
-    const lastPicked = presenterQueue[presenterQueue.length - 1];
-    if (pool[0] === lastPicked) {
-      const swapIdx = 1 + Math.floor(Math.random() * (pool.length - 1));
-      [pool[0], pool[swapIdx]] = [pool[swapIdx], pool[0]];
-    }
-  }
-  return pool;
+// === HiDPI CANVAS SETUP ===
+let wheelSize = 400;
+
+function setupHiDPICanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  // Use the wheel-outer container to determine rendered size
+  const outer = document.querySelector('.wheel-outer');
+  const cssSize = outer ? Math.round(outer.clientWidth) || 400 : 400;
+  wheelSize = cssSize;
+
+  canvas.width = cssSize * dpr;
+  canvas.height = cssSize * dpr;
+  canvas.style.width = cssSize + 'px';
+  canvas.style.height = cssSize + 'px';
+
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.scale(dpr, dpr);
 }
 
-function getNextName() {
-  if (shufflePool.length === 0) {
-    shufflePool = refillPool();
+setupHiDPICanvas();
+
+window.addEventListener('resize', () => {
+  setupHiDPICanvas();
+  drawWheel(wheelAngleDeg);
+});
+
+// === FAIR SHUFFLE ===
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return shufflePool.shift();
+  return a;
+}
+
+function refillPool() {
+  let p = shuffle(NAMES);
+  if (queue.length > 0 && p[0] === queue[queue.length - 1]) {
+    const s = 1 + Math.floor(Math.random() * (p.length - 1));
+    [p[0], p[s]] = [p[s], p[0]];
+  }
+  return p;
+}
+
+function pickNext() {
+  if (!pool.length) pool = refillPool();
+  return pool.shift();
+}
+
+// === INDEX AT POINTER ===
+// Returns the index of the name currently under the pointer
+function indexAtPointer(angleDeg) {
+  const sliceDeg = 360 / NAMES.length;
+  const effective = ((270 - (angleDeg % 360)) % 360 + 360) % 360;
+  return Math.floor(effective / sliceDeg) % NAMES.length;
+}
+
+function nameAtPointer(angleDeg) {
+  return NAMES[indexAtPointer(angleDeg)];
 }
 
 // === WHEEL DRAWING ===
-function drawWheel(rotation = 0) {
-  const w = canvas.width;
-  const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  const r = Math.min(cx, cy) - 4;
-  const sliceAngle = (2 * Math.PI) / NAMES.length;
+// highlightIdx: index of name at pointer to color orange (text only, no BG)
+function drawWheel(angleDeg, highlightIdx) {
+  const size = wheelSize;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = cx - 2;
+  const n = NAMES.length;
+  const slice = (2 * Math.PI) / n;
+  const rad = (angleDeg * Math.PI) / 180;
 
-  ctx.clearRect(0, 0, w, h);
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation);
+  // Scale factor relative to the 400px base design
+  const s = size / 400;
+  const fontSize = Math.round(12 * s);
+  const labelPad = Math.round(18 * s);
 
-  NAMES.forEach((name, i) => {
-    const start = i * sliceAngle;
-    const end = start + sliceAngle;
+  c.clearRect(0, 0, size, size);
 
-    // Slice
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, r, start, end);
-    ctx.closePath();
-    ctx.fillStyle = COLORS[i % COLORS.length];
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+  // Solid background disc — exact same as page background
+  c.beginPath();
+  c.arc(cx, cy, r, 0, 2 * Math.PI);
+  c.fillStyle = '#e5e5e5';
+  c.fill();
 
-    // Text
-    ctx.save();
-    ctx.rotate(start + sliceAngle / 2);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 3;
-    ctx.fillText(name, r - 16, 5);
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  });
+  c.save();
+  c.translate(cx, cy);
+  c.rotate(rad);
 
-  // Center circle
-  ctx.beginPath();
-  ctx.arc(0, 0, 28, 0, 2 * Math.PI);
-  ctx.fillStyle = '#e0e5ec';
-  ctx.fill();
-  ctx.shadowColor = 'rgba(0,0,0,0.15)';
-  ctx.shadowBlur = 8;
-  ctx.strokeStyle = '#d1d9e6';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  const innerR = Math.round(4 * s);
+  const grooveOffset = 0.006;
 
-  ctx.restore();
+  for (let i = 0; i < n; i++) {
+    const a0 = i * slice;
+
+    // Dark side of groove
+    c.save();
+    c.rotate(a0 - grooveOffset);
+    c.beginPath();
+    c.moveTo(innerR, 0);
+    c.lineTo(r - 2, 0);
+    c.strokeStyle = 'rgba(0, 0, 0, 0.07)';
+    c.lineWidth = 1;
+    c.stroke();
+    c.restore();
+
+    // Light side of groove
+    c.save();
+    c.rotate(a0 + grooveOffset);
+    c.beginPath();
+    c.moveTo(innerR, 0);
+    c.lineTo(r - 2, 0);
+    c.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    c.lineWidth = 1;
+    c.stroke();
+    c.restore();
+
+    // Name label — orange if this name is under the pointer
+    c.save();
+    c.rotate(a0 + slice / 2);
+    c.textAlign = 'right';
+    c.textBaseline = 'middle';
+
+    if (highlightIdx !== undefined && i === highlightIdx) {
+      c.fillStyle = '#d4a035';
+      c.font = `700 ${fontSize}px 'JetBrains Mono', monospace`;
+    } else {
+      c.fillStyle = '#444';
+      c.font = `500 ${fontSize}px 'JetBrains Mono', monospace`;
+    }
+
+    c.fillText(NAMES[i], r - labelPad, 0);
+    c.restore();
+  }
+
+  c.restore();
 }
 
-// === SPIN LOGIC ===
-function getWinnerFromRotation(finalRotation) {
-  const sliceAngle = 360 / NAMES.length;
-  // Pointer is at top (270° in standard math coords, but we use CSS rotation)
-  // Normalize the angle: the pointer is at top, wheel spins clockwise
-  const normalizedDeg = ((-(finalRotation * 180 / Math.PI) % 360) + 360) % 360;
-  const index = Math.floor(normalizedDeg / sliceAngle);
-  return NAMES[index];
-}
-
+// === SPIN ===
 function spin() {
-  if (isSpinning || presenterQueue.length >= MAX_PRESENTERS) return;
+  if (spinning || queue.length >= MAX_SLOTS) return;
+  getAudioCtx();
 
-  ensureAudioCtx();
-  isSpinning = true;
+  spinning = true;
   spinBtn.disabled = true;
 
-  const nextName = getNextName();
-  const nameIndex = NAMES.indexOf(nextName);
-  const sliceAngle = (2 * Math.PI) / NAMES.length;
+  const name = pickNext();
+  const idx = NAMES.indexOf(name);
+  const sliceDeg = 360 / NAMES.length;
 
-  // Calculate target rotation so pointer lands on the chosen name
-  const targetSliceCenter = nameIndex * sliceAngle + sliceAngle / 2;
-  const extraSpins = (4 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
-  const targetRotation = currentRotation - extraSpins - targetSliceCenter +
-    (Math.random() * sliceAngle * 0.6 - sliceAngle * 0.3);
+  const targetRemainder = 270 - idx * sliceDeg - sliceDeg / 2;
+  const jitter = (Math.random() - 0.5) * sliceDeg * 0.6;
+  const desiredRemainder = ((targetRemainder + jitter) % 360 + 360) % 360;
 
-  // Tick sound during spin
-  let lastTickAngle = currentRotation;
-  const tickInterval = sliceAngle;
+  const fullSpins = (5 + Math.floor(Math.random() * 3)) * 360;
+  const currentRemainder = ((wheelAngleDeg % 360) + 360) % 360;
+  const extraToAlign = ((desiredRemainder - currentRemainder) % 360 + 360) % 360;
+  const targetTotal = wheelAngleDeg + fullSpins + extraToAlign;
 
-  gsap.to({}, {
-    duration: 0,
-    onStart: () => {
-      gsap.to({ rot: currentRotation }, {
-        rot: targetRotation,
-        duration: 3.5 + Math.random() * 1.5,
-        ease: 'power4.out',
-        onUpdate: function() {
-          const r = this.targets()[0].rot;
-          drawWheel(r);
+  let lastTickDeg = wheelAngleDeg;
 
-          // Tick sounds
-          const delta = Math.abs(r - lastTickAngle);
-          if (delta >= tickInterval) {
-            playTickSound();
-            lastTickAngle = r;
-          }
-        },
-        onComplete: () => {
-          currentRotation = targetRotation;
-          isSpinning = false;
-          spinBtn.disabled = presenterQueue.length >= MAX_PRESENTERS;
-          playSelectSound();
-          addToQueue(nextName);
-        }
-      });
+  const proxy = { angle: wheelAngleDeg };
+  gsap.to(proxy, {
+    angle: targetTotal,
+    duration: 4 + Math.random(),
+    ease: 'power4.out',
+    onUpdate() {
+      // Highlight the name currently under the pointer in orange
+      const currentIdx = indexAtPointer(proxy.angle);
+      drawWheel(proxy.angle, currentIdx);
+      if (Math.abs(proxy.angle - lastTickDeg) >= sliceDeg) {
+        sound.tick();
+        lastTickDeg = proxy.angle;
+      }
+    },
+    onComplete() {
+      wheelAngleDeg = targetTotal;
+      spinning = false;
+      updateSpinBtn();
+      sound.select();
+      const landedIdx = indexAtPointer(wheelAngleDeg);
+      const landed = NAMES[landedIdx];
+      // Keep the final landed name highlighted
+      drawWheel(wheelAngleDeg, landedIdx);
+      addToQueue(landed);
     }
   });
 }
 
-// === PRESENTER QUEUE ===
+// === QUEUE ===
 function addToQueue(name) {
-  presenterQueue.push(name);
+  queue.push(name);
   renderQueue();
-  updateQueueInfo();
+  updateInfo();
 }
 
-function removeFromQueue(index) {
-  const item = presenterList.children[index];
-  if (item) {
-    item.classList.add('removing');
-    setTimeout(() => {
-      presenterQueue.splice(index, 1);
-      renderQueue();
-      updateQueueInfo();
-    }, 300);
-  }
+function removeFromQueue(i) {
+  const el = listEl.children[i];
+  if (!el) return;
+  el.classList.add('removing');
+  setTimeout(() => {
+    queue.splice(i, 1);
+    renderQueue();
+    updateInfo();
+  }, 300);
 }
 
 function renderQueue() {
-  presenterList.innerHTML = '';
-  presenterQueue.forEach((name, i) => {
+  listEl.innerHTML = '';
+  queue.forEach((name, i) => {
     const li = document.createElement('li');
     li.className = 'presenter-item';
     li.innerHTML = `
       <div class="presenter-number">${i + 1}</div>
       <div class="presenter-name">${name}</div>
-      <div class="presenter-duration">${SLOT_DURATION} min</div>
-      <button class="presenter-remove" data-index="${i}">&times;</button>
+      <div class="presenter-duration">${SLOT_MIN} min</div>
+      <button class="presenter-remove" data-i="${i}">&times;</button>
     `;
-    presenterList.appendChild(li);
-
-    // Animate entry
-    gsap.from(li, { opacity: 0, x: 30, duration: 0.35, ease: 'back.out(1.4)' });
+    listEl.appendChild(li);
+    gsap.from(li, { opacity: 0, x: 20, duration: 0.3, ease: 'power2.out' });
   });
 
-  // Remove button listeners
-  presenterList.querySelectorAll('.presenter-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      removeFromQueue(parseInt(btn.dataset.index));
-    });
+  listEl.querySelectorAll('.presenter-remove').forEach(btn => {
+    btn.onclick = () => removeFromQueue(+btn.dataset.i);
   });
 }
 
-function updateQueueInfo() {
-  const totalMin = presenterQueue.length * SLOT_DURATION;
-  queueTime.textContent = `${totalMin} / ${SESSION_DURATION} min`;
-  startBtn.disabled = presenterQueue.length === 0;
-  spinBtn.disabled = isSpinning || presenterQueue.length >= MAX_PRESENTERS;
+function updateInfo() {
+  const total = queue.length * SLOT_MIN;
+  timeEl.textContent = `${total} / ${SESSION_MIN} min`;
+  startBtn.disabled = queue.length === 0;
+  updateSpinBtn();
 
-  if (presenterQueue.length >= MAX_PRESENTERS) {
-    spinInfo.textContent = 'Session full! Start presentations or remove someone.';
+  if (queue.length >= MAX_SLOTS) {
+    spinInfo.textContent = 'Session full — start or remove someone';
   } else {
-    const remaining = MAX_PRESENTERS - presenterQueue.length;
-    spinInfo.textContent = `${remaining} slot${remaining !== 1 ? 's' : ''} remaining`;
+    const left = MAX_SLOTS - queue.length;
+    spinInfo.textContent = `${left} slot${left !== 1 ? 's' : ''} remaining`;
   }
 }
 
+function updateSpinBtn() {
+  spinBtn.disabled = spinning || queue.length >= MAX_SLOTS;
+}
+
 function resetAll() {
-  presenterQueue = [];
-  shufflePool = [];
-  currentRotation = 0;
-  isSpinning = false;
+  queue = [];
+  pool = [];
+  wheelAngleDeg = 0;
+  spinning = false;
   drawWheel(0);
   renderQueue();
-  updateQueueInfo();
+  updateInfo();
   spinInfo.textContent = '';
 }
 
 // === PRESENTATION MODE ===
 function startPresentations() {
-  if (presenterQueue.length === 0) return;
-  ensureAudioCtx();
-  presentationIndex = 0;
+  if (!queue.length) return;
+  getAudioCtx();
+  timerIdx = 0;
   overlay.classList.remove('hidden');
-  startCurrentPresenter();
+  runPresenter();
 }
 
-function startCurrentPresenter() {
-  if (presentationIndex >= presenterQueue.length) {
-    endAllPresentations();
-    return;
-  }
+function runPresenter() {
+  if (timerIdx >= queue.length) { stopAll(); return; }
 
-  const name = presenterQueue[presentationIndex];
-  currentPresenterName.textContent = name;
-  timeRemaining = SLOT_DURATION * 60;
-  isPaused = false;
-  warningPlayed = false;
-  pauseBtn.textContent = 'PAUSE';
-  timerStatus.textContent = '';
-  timerStatus.className = 'timer-status';
-  timerProgress.classList.remove('warning', 'danger');
+  nameEl.textContent = queue[timerIdx];
+  timerSec = SLOT_MIN * 60;
+  paused = false;
+  warned = false;
+  pauseBtn.textContent = 'Pause';
+  pauseBtn.disabled = false;
+  skipBtn.disabled = false;
+  nextBtn.classList.add('hidden');
+  statusEl.textContent = '';
+  statusEl.className = 'pres-status';
+  updateTimerUI();
+  showUpNext();
 
-  updateTimerDisplay();
-  updateUpNext();
-
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(tickTimer, 1000);
+  clearInterval(timerRef);
+  timerRef = setInterval(tick, 1000);
 }
 
-function tickTimer() {
-  if (isPaused) return;
+function tick() {
+  if (paused) return;
+  timerSec--;
+  updateTimerUI();
 
-  timeRemaining--;
-  updateTimerDisplay();
-
-  // 1 minute warning
-  if (timeRemaining === 60 && !warningPlayed) {
-    warningPlayed = true;
-    playWarningSound();
-    timerStatus.textContent = '1 MINUTE LEFT';
-    timerStatus.className = 'timer-status warning-text';
-    timerProgress.classList.add('warning');
+  if (timerSec === 60 && !warned) {
+    warned = true;
+    sound.warning();
+    statusEl.textContent = '1 minute left';
+    statusEl.className = 'pres-status warning-text';
   }
 
-  // 10 seconds left
-  if (timeRemaining <= 10 && timeRemaining > 0) {
-    timerProgress.classList.remove('warning');
-    timerProgress.classList.add('danger');
+  if (timerSec <= 10 && timerSec > 0) {
+    statusEl.textContent = 'wrapping up';
+    statusEl.className = 'pres-status danger-text';
   }
 
-  // Done
-  if (timeRemaining <= 0) {
-    clearInterval(timerInterval);
-    playDoneSound();
-    timerStatus.textContent = 'TIME\'S UP!';
-    timerStatus.className = 'timer-status warning-text';
-
-    setTimeout(() => {
-      presentationIndex++;
-      startCurrentPresenter();
-    }, 2000);
+  if (timerSec <= 0) {
+    clearInterval(timerRef);
+    sound.done();
+    statusEl.textContent = "time's up";
+    statusEl.className = 'pres-status danger-text';
+    nextBtn.classList.remove('hidden');
+    pauseBtn.disabled = true;
+    skipBtn.disabled = true;
   }
 }
 
-function updateTimerDisplay() {
-  const totalSeconds = SLOT_DURATION * 60;
-  const mins = Math.floor(Math.max(0, timeRemaining) / 60);
-  const secs = Math.max(0, timeRemaining) % 60;
-  timerText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+function updateTimerUI() {
+  const t = Math.max(0, timerSec);
+  const m = Math.floor(t / 60);
+  const s = t % 60;
+  timerTextEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
 
-  // Ring progress
-  const circumference = 2 * Math.PI * 90;
-  const progress = timeRemaining / totalSeconds;
-  timerProgress.style.strokeDashoffset = circumference * (1 - progress);
-}
+  // Update the horizontal progress bar
+  const pct = t / (SLOT_MIN * 60);
+  progressBar.style.width = (pct * 100) + '%';
 
-function updateUpNext() {
-  if (presentationIndex + 1 < presenterQueue.length) {
-    upNext.textContent = `Up next: ${presenterQueue[presentationIndex + 1]}`;
+  // Change bar color based on time
+  if (t <= 10) {
+    progressBar.style.background = 'var(--danger)';
+  } else if (t <= 60) {
+    progressBar.style.background = 'var(--warning)';
   } else {
-    upNext.textContent = presentationIndex + 1 >= presenterQueue.length ? '' : '';
+    progressBar.style.background = 'linear-gradient(90deg, var(--amber), var(--amber-dark))';
+  }
+}
+
+function showUpNext() {
+  if (timerIdx + 1 < queue.length) {
+    nextEl.textContent = 'Up next — ' + queue[timerIdx + 1];
+    nextEl.style.display = '';
+  } else if (timerIdx + 1 >= queue.length) {
+    nextEl.textContent = 'Last presenter';
+    nextEl.style.display = '';
   }
 }
 
 function togglePause() {
-  isPaused = !isPaused;
-  pauseBtn.textContent = isPaused ? 'RESUME' : 'PAUSE';
-  if (isPaused) {
-    timerStatus.textContent = 'PAUSED';
-    timerStatus.className = 'timer-status';
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  if (paused) {
+    statusEl.textContent = 'paused';
+    statusEl.className = 'pres-status';
   } else {
-    timerStatus.textContent = timeRemaining <= 60 ? '1 MINUTE LEFT' : '';
-    timerStatus.className = timeRemaining <= 60 ? 'timer-status warning-text' : 'timer-status';
+    if (timerSec <= 10) {
+      statusEl.textContent = 'wrapping up';
+      statusEl.className = 'pres-status danger-text';
+    } else if (timerSec <= 60) {
+      statusEl.textContent = '1 minute left';
+      statusEl.className = 'pres-status warning-text';
+    } else {
+      statusEl.textContent = '';
+      statusEl.className = 'pres-status';
+    }
   }
 }
 
+function advanceToNext() {
+  timerIdx++;
+  runPresenter();
+}
+
 function skipPresenter() {
-  clearInterval(timerInterval);
-  presentationIndex++;
-  startCurrentPresenter();
+  clearInterval(timerRef);
+  timerIdx++;
+  runPresenter();
 }
 
-function endAllPresentations() {
-  clearInterval(timerInterval);
+function stopAll() {
+  clearInterval(timerRef);
   overlay.classList.add('hidden');
-  timerStatus.textContent = '';
 }
 
-// === EVENT LISTENERS ===
+// === EVENTS ===
 spinBtn.addEventListener('click', spin);
 startBtn.addEventListener('click', startPresentations);
 resetBtn.addEventListener('click', resetAll);
 skipBtn.addEventListener('click', skipPresenter);
 pauseBtn.addEventListener('click', togglePause);
-stopBtn.addEventListener('click', endAllPresentations);
+nextBtn.addEventListener('click', advanceToNext);
+stopBtn.addEventListener('click', stopAll);
 
 // === INIT ===
 drawWheel(0);
-updateQueueInfo();
+updateInfo();

@@ -4,59 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gathering Roulette</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
   <div class="app">
+    <!-- Header -->
     <header class="header">
-      <h1>Gathering Roulette</h1>
-      <p class="subtitle">5 min per speaker &bull; 1h 30m session</p>
+      <h1>Gathering roulette</h1>
     </header>
 
-    <div class="main-layout">
-      <!-- Left: Wheel Section -->
-      <div class="wheel-section">
-        <div class="wheel-container">
-          <div class="wheel-pointer"></div>
-          <canvas id="wheel" width="400" height="400"></canvas>
-        </div>
-        <button id="spin-btn" class="neu-btn spin-btn">SPIN</button>
-        <div class="spin-info" id="spin-info"></div>
-      </div>
-
-      <!-- Right: Presenter Queue -->
-      <div class="queue-section">
-        <div class="queue-header">
-          <h2>Presenter Queue</h2>
-          <span class="queue-time" id="queue-time">0 / 90 min</span>
-        </div>
-        <ul id="presenter-list" class="presenter-list"></ul>
-        <div class="queue-actions">
-          <button id="start-btn" class="neu-btn start-btn" disabled>START PRESENTATIONS</button>
-          <button id="reset-btn" class="neu-btn reset-btn">RESET</button>
+    <!-- Wheel -->
+    <div class="wheel-center">
+      <div class="wheel-wrapper">
+        <div class="wheel-pointer"></div>
+        <div class="wheel-outer">
+          <canvas id="wheel-canvas" width="400" height="400"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Presentation Mode Overlay -->
+    <!-- Spin button (own element for mobile flow) -->
+    <div class="spin-area">
+      <button id="spin-btn" class="neu-btn spin-btn">Spin</button>
+    </div>
+
+    <!-- Spin info -->
+    <div class="spin-info" id="spin-info"></div>
+
+    <!-- Queue panel -->
+    <div class="queue-panel">
+      <div class="queue-header">
+        <span class="queue-label">Presentation Queue</span>
+        <span class="queue-time" id="queue-time">0 / 90 min</span>
+      </div>
+      <ul id="presenter-list" class="presenter-list"></ul>
+    </div>
+
+    <!-- Action bar: Start + Reset -->
+    <div class="action-bar">
+      <button id="start-btn" class="neu-btn bottom-btn start-btn" disabled>Start</button>
+      <button id="reset-btn" class="neu-btn bottom-btn reset-btn">Reset</button>
+    </div>
+
+    <!-- Presentation Overlay -->
     <div id="presentation-overlay" class="presentation-overlay hidden">
-      <div class="presentation-card">
-        <div class="presenter-badge" id="current-presenter-name">—</div>
-        <div class="timer-ring">
-          <svg viewBox="0 0 200 200">
-            <circle class="timer-bg" cx="100" cy="100" r="90"/>
-            <circle class="timer-progress" id="timer-progress" cx="100" cy="100" r="90"/>
-          </svg>
-          <div class="timer-text" id="timer-text">5:00</div>
+      <div class="pres-layout">
+        <!-- Center content -->
+        <div class="pres-center">
+          <div class="pres-card">
+            <div class="pres-name" id="current-presenter-name">&mdash;</div>
+            <div class="pres-clock" id="timer-text">5:00</div>
+            <div class="pres-status" id="timer-status"></div>
+          </div>
+          <div class="pres-up-next" id="up-next"></div>
         </div>
-        <div class="timer-status" id="timer-status"></div>
-        <div class="presentation-controls">
-          <button id="skip-btn" class="neu-btn">SKIP</button>
-          <button id="pause-btn" class="neu-btn">PAUSE</button>
-          <button id="stop-presentations-btn" class="neu-btn stop-btn">STOP ALL</button>
+
+        <!-- Bottom controls -->
+        <div class="pres-bottom">
+          <div class="pres-controls">
+            <button id="skip-btn" class="neu-btn pres-ctrl-btn">Skip</button>
+            <button id="pause-btn" class="neu-btn pres-ctrl-btn">Pause</button>
+            <button id="next-btn" class="neu-btn pres-ctrl-btn next-btn hidden">Next</button>
+            <button id="stop-btn" class="neu-btn pres-ctrl-btn stop-btn">Stop All</button>
+          </div>
+          <!-- Progress bar at very bottom -->
+          <div class="pres-progress-track">
+            <div class="pres-progress-bar" id="timer-progress-bar"></div>
+          </div>
         </div>
-        <div class="up-next" id="up-next"></div>
       </div>
     </div>
   </div>
