@@ -428,13 +428,13 @@ function updateTimerUI() {
   const pct = t / (SLOT_MIN * 60);
   progressBar.style.width = (pct * 100) + '%';
 
-  // Change bar color based on time
+  // Change bar opacity based on time (stays Game Boy green)
   if (t <= 10) {
-    progressBar.style.background = 'var(--danger)';
+    progressBar.style.background = '#2a4010';
   } else if (t <= 60) {
-    progressBar.style.background = 'var(--warning)';
+    progressBar.style.background = '#3a5818';
   } else {
-    progressBar.style.background = 'linear-gradient(90deg, var(--amber), var(--amber-dark))';
+    progressBar.style.background = '#486820';
   }
 }
 

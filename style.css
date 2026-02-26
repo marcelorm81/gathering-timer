@@ -405,10 +405,15 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: #486820;
-  min-height: 20px;
+  min-height: 0;
   letter-spacing: 2px;
   text-transform: uppercase;
   opacity: 0.6;
+}
+
+.pres-status:not(:empty) {
+  min-height: 20px;
+  padding-top: 12px;
 }
 
 .pres-status.warning-text {
@@ -437,7 +442,7 @@ body {
   margin-top: 0;
 }
 
-/* -- Bottom area: controls + progress bar -- */
+/* -- Bottom area: controls -- */
 .pres-bottom {
   padding: 0 40px 0;
 }
@@ -472,23 +477,23 @@ body {
   font-weight: 700;
 }
 
-/* -- Amber progress bar at the very bottom -- */
+/* -- Game Boy progress bar inside the card -- */
 .pres-progress-track {
-  width: 100%;
-  height: 6px;
-  background: var(--shadow-d);
-  border-radius: 3px 3px 0 0;
+  width: 80%;
+  height: 8px;
+  background: rgba(72, 104, 32, 0.15);
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.08);
+  box-shadow: inset 1px 1px 3px rgba(72, 104, 32, 0.2);
+  margin-top: 4px;
 }
 
 .pres-progress-bar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, var(--amber), var(--amber-dark));
-  border-radius: 3px;
+  background: #486820;
+  border-radius: 4px;
   transition: width 0.3s linear;
-  box-shadow: 0 0 8px rgba(212, 160, 53, 0.3);
 }
 
 .hidden {
