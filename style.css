@@ -465,18 +465,20 @@ body {
   display: flex;
   justify-content: center;
   gap: 16px;
-  padding-top: 20px;
+  padding-top: 10px;
   padding-bottom: 28px;
   width: 520px;
   margin: 0 auto;
+  flex-wrap: wrap;
 }
 
 .pres-controls .pres-ctrl-btn {
   flex: 1;
+  min-width: calc(50% - 12px);
 }
 
 .pres-ctrl-btn {
-  padding: 12px 32px;
+  padding: 22px 32px;
   font-size: 12px;
   border-radius: 14px;
   letter-spacing: 0.5px;
@@ -484,11 +486,13 @@ body {
 
 .pres-ctrl-btn.stop-btn {
   color: var(--danger);
+  flex-basis: 100%;
 }
 
 .pres-ctrl-btn.next-btn {
   color: var(--green);
   font-weight: 700;
+  flex-basis: 100%;
 }
 
 /* -- Game Boy progress bar inside the card -- */
