@@ -433,6 +433,20 @@ body {
   50% { opacity: 0.4; }
 }
 
+/* Countdown numbers fade in/out during last minute */
+@keyframes clockPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.pres-clock.urgency {
+  animation: clockPulse 2s ease-in-out infinite;
+}
+
+.pres-clock.urgency-critical {
+  animation: clockPulse 1s ease-in-out infinite;
+}
+
 .pres-up-next {
   color: #486820;
   font-size: 12px;

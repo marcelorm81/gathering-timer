@@ -383,6 +383,7 @@ function runPresenter() {
   nextBtn.classList.add('hidden');
   statusEl.textContent = '';
   statusEl.className = 'pres-status';
+  timerTextEl.classList.remove('urgency', 'urgency-critical');
   updateTimerUI();
   showUpNext();
 
@@ -400,11 +401,14 @@ function tick() {
     sound.warning();
     statusEl.textContent = '1 minute left';
     statusEl.className = 'pres-status warning-text';
+    timerTextEl.classList.add('urgency');
   }
 
   if (timerSec <= 10 && timerSec > 0) {
     statusEl.textContent = 'wrapping up';
     statusEl.className = 'pres-status danger-text';
+    timerTextEl.classList.remove('urgency');
+    timerTextEl.classList.add('urgency-critical');
   }
 
   if (timerSec <= 0) {
@@ -454,13 +458,17 @@ function togglePause() {
   if (paused) {
     statusEl.textContent = 'paused';
     statusEl.className = 'pres-status';
+    // Freeze the clock pulse while paused
+    timerTextEl.classList.remove('urgency', 'urgency-critical');
   } else {
     if (timerSec <= 10) {
       statusEl.textContent = 'wrapping up';
       statusEl.className = 'pres-status danger-text';
+      timerTextEl.classList.add('urgency-critical');
     } else if (timerSec <= 60) {
       statusEl.textContent = '1 minute left';
       statusEl.className = 'pres-status warning-text';
+      timerTextEl.classList.add('urgency');
     } else {
       statusEl.textContent = '';
       statusEl.className = 'pres-status';
