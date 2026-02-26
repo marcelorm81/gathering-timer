@@ -126,6 +126,27 @@ function nameAtPointer(angleDeg) {
   return NAMES[indexAtPointer(angleDeg)];
 }
 
+// === TICKER ANIMATION ===
+const pointerEl = document.querySelector('.wheel-pointer');
+let tickerTween = null;
+
+function tickPointer(speed) {
+  // speed: 0 (slow) to 1 (fast) — controls deflection amount
+  const deflect = 8 + speed * 14; // 8°–22° swing based on speed
+  const dur = 0.08 + (1 - speed) * 0.06; // faster at high speed
+
+  if (tickerTween) tickerTween.kill();
+  tickerTween = gsap.fromTo(pointerEl,
+    { rotation: deflect },
+    {
+      rotation: 0,
+      duration: dur,
+      ease: 'power3.out',
+      overwrite: true
+    }
+  );
+}
+
 // === WHEEL DRAWING ===
 // highlightIdx: index of name at pointer to color orange (text only, no BG)
 function drawWheel(angleDeg, highlightIdx) {
@@ -201,6 +222,16 @@ function drawWheel(angleDeg, highlightIdx) {
   }
 
   c.restore();
+
+  // Soft fade at the outer edge — blends wheel into the neumorphic ring
+  const fadeWidth = Math.round(12 * s);
+  const grad = c.createRadialGradient(cx, cy, r - fadeWidth, cx, cy, r);
+  grad.addColorStop(0, 'rgba(229, 229, 229, 0)');
+  grad.addColorStop(1, 'rgba(229, 229, 229, 0.6)');
+  c.beginPath();
+  c.arc(cx, cy, r, 0, 2 * Math.PI);
+  c.fillStyle = grad;
+  c.fill();
 }
 
 // === SPIN ===
@@ -224,7 +255,8 @@ function spin() {
   const extraToAlign = ((desiredRemainder - currentRemainder) % 360 + 360) % 360;
   const targetTotal = wheelAngleDeg + fullSpins + extraToAlign;
 
-  let lastTickDeg = wheelAngleDeg;
+  let lastTickIdx = indexAtPointer(wheelAngleDeg);
+  const totalTravel = targetTotal - wheelAngleDeg;
 
   const proxy = { angle: wheelAngleDeg };
   gsap.to(proxy, {
@@ -235,9 +267,15 @@ function spin() {
       // Highlight the name currently under the pointer in orange
       const currentIdx = indexAtPointer(proxy.angle);
       drawWheel(proxy.angle, currentIdx);
-      if (Math.abs(proxy.angle - lastTickDeg) >= sliceDeg) {
+
+      // Tick when pointer crosses into a new name segment
+      if (currentIdx !== lastTickIdx) {
         sound.tick();
-        lastTickDeg = proxy.angle;
+        // Speed ratio: 0 at end, 1 at start — controls ticker intensity
+        const progress = (proxy.angle - wheelAngleDeg) / totalTravel;
+        const speed = Math.max(0, 1 - progress);
+        tickPointer(speed);
+        lastTickIdx = currentIdx;
       }
     },
     onComplete() {
@@ -249,6 +287,8 @@ function spin() {
       const landed = NAMES[landedIdx];
       // Keep the final landed name highlighted
       drawWheel(wheelAngleDeg, landedIdx);
+      // Reset pointer to rest position
+      gsap.to(pointerEl, { rotation: 0, duration: 0.15, ease: 'power2.out' });
       addToQueue(landed);
     }
   });

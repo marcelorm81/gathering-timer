@@ -230,13 +230,15 @@ body {
   border-radius: 50%;
 }
 
-/* === WHEEL POINTER — amber triangle === */
+/* === WHEEL POINTER — amber triangle with ticker pivot === */
 .wheel-pointer {
   position: absolute;
   top: 2px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  /* Pivot from the top so it swings like a real ticker */
+  transform-origin: 50% 0%;
 }
 
 .wheel-pointer::after {
@@ -360,7 +362,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 12px;
 }
 
 /* Inset bevel card — squared, big area */
@@ -380,15 +382,16 @@ body {
 }
 
 .pres-name {
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 3px;
   text-transform: uppercase;
+  padding-top: 20px;
 }
 
 .pres-clock {
-  font-size: 160px;
+  font-size: 224px;
   font-weight: 300;
   color: var(--amber);
   font-variant-numeric: tabular-nums;
@@ -431,6 +434,7 @@ body {
   letter-spacing: 1px;
   font-weight: 400;
   margin-top: 8px;
+  padding-bottom: 20px;
 }
 
 /* -- Bottom area: controls + progress bar -- */
@@ -445,6 +449,10 @@ body {
   padding-bottom: 28px;
   width: 520px;
   margin: 0 auto;
+}
+
+.pres-controls .pres-ctrl-btn {
+  flex: 1;
 }
 
 .pres-ctrl-btn {
@@ -654,6 +662,7 @@ body {
   .pres-name {
     font-size: 22px;
     letter-spacing: 2px;
+    padding-top: 0;
   }
 
   .pres-clock {
@@ -669,6 +678,7 @@ body {
     font-size: 11px;
     margin-top: auto;
     padding-top: 16px;
+    padding-bottom: 0;
   }
 
   .pres-bottom {
