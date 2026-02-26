@@ -371,17 +371,17 @@ body {
   width: 520px;
   min-height: 340px;
   padding: 48px 60px;
-  background: var(--bg);
+  background: #B8D880;
   border-radius: 20px;
   box-shadow:
-    inset 6px 6px 14px var(--shadow-d),
-    inset -6px -6px 14px var(--shadow-l);
+    inset 6px 6px 14px rgba(72, 104, 32, 0.35),
+    inset -6px -6px 14px rgba(210, 240, 170, 0.5);
 }
 
 .pres-name {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text);
+  color: #486820;
   letter-spacing: 3px;
   text-transform: uppercase;
   padding-top: 20px;
@@ -390,7 +390,7 @@ body {
 .pres-clock {
   font-size: min(224px, 11vw);
   font-weight: 300;
-  color: var(--amber);
+  color: #486820;
   font-variant-numeric: tabular-nums;
   line-height: 1;
   letter-spacing: 4px;
@@ -406,19 +406,22 @@ body {
 .pres-status {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-light);
+  color: #486820;
   min-height: 20px;
   letter-spacing: 2px;
   text-transform: uppercase;
+  opacity: 0.6;
 }
 
 .pres-status.warning-text {
-  color: var(--warning);
+  color: #486820;
+  opacity: 1;
   animation: pulse 1s ease-in-out infinite;
 }
 
 .pres-status.danger-text {
-  color: var(--danger);
+  color: #486820;
+  opacity: 1;
   animation: pulse 0.5s ease-in-out infinite;
 }
 
@@ -428,7 +431,7 @@ body {
 }
 
 .pres-up-next {
-  color: var(--text-light);
+  color: #486820;
   font-size: 12px;
   min-height: 20px;
   letter-spacing: 1px;
@@ -650,10 +653,10 @@ body {
     padding: 36px 28px 28px;
     border-radius: 24px;
     justify-content: space-between;
-    /* Inward bevel neumorphic on mobile */
+    /* Game Boy LCD inset bevel on mobile */
     box-shadow:
-      inset 6px 6px 14px var(--shadow-d),
-      inset -6px -6px 14px var(--shadow-l);
+      inset 6px 6px 14px rgba(72, 104, 32, 0.35),
+      inset -6px -6px 14px rgba(210, 240, 170, 0.5);
   }
 
   .pres-name {
