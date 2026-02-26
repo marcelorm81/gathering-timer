@@ -370,7 +370,7 @@ body {
   justify-content: space-between;
   width: 520px;
   min-height: 340px;
-  padding: 48px 60px;
+  padding: 20px 60px;
   background: #B8D880;
   border-radius: 20px;
   box-shadow:
@@ -384,7 +384,6 @@ body {
   color: #486820;
   letter-spacing: 3px;
   text-transform: uppercase;
-  padding-top: 20px;
 }
 
 .pres-clock {
@@ -436,8 +435,7 @@ body {
   min-height: 20px;
   letter-spacing: 1px;
   font-weight: 400;
-  margin-top: 8px;
-  padding-bottom: 20px;
+  margin-top: 0;
 }
 
 /* -- Bottom area: controls + progress bar -- */
@@ -650,7 +648,7 @@ body {
   .pres-card {
     width: 100%;
     min-height: 65vh;
-    padding: 36px 28px 28px;
+    padding: 20px 28px;
     border-radius: 24px;
     justify-content: space-between;
     /* Game Boy LCD inset bevel on mobile */
@@ -662,7 +660,6 @@ body {
   .pres-name {
     font-size: 22px;
     letter-spacing: 2px;
-    padding-top: 0;
   }
 
   .pres-clock {
@@ -676,9 +673,7 @@ body {
 
   .pres-up-next {
     font-size: 11px;
-    margin-top: auto;
-    padding-top: 16px;
-    padding-bottom: 0;
+    margin-top: 0;
   }
 
   .pres-bottom {
