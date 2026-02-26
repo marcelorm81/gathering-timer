@@ -290,7 +290,7 @@ body {
 /* === SPIN INFO — floating below center === */
 .spin-info {
   position: absolute;
-  bottom: 100px;
+  bottom: 72px;
   left: 50%;
   transform: translateX(-55%);
   color: var(--text-light);
