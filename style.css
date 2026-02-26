@@ -494,19 +494,20 @@ body {
 /* -- Game Boy progress bar inside the card -- */
 .pres-progress-track {
   width: 80%;
-  height: 8px;
-  background: rgba(72, 104, 32, 0.15);
-  border-radius: 4px;
+  height: 10px;
+  background: transparent;
+  border: 2px solid #486820;
+  border-radius: 3px;
   overflow: hidden;
-  box-shadow: inset 1px 1px 3px rgba(72, 104, 32, 0.2);
   margin-top: 4px;
+  margin-bottom: 15px;
 }
 
 .pres-progress-bar {
   height: 100%;
   width: 100%;
   background: #486820;
-  border-radius: 4px;
+  border-radius: 1px;
   transition: width 0.3s linear;
 }
 
