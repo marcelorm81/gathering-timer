@@ -501,19 +501,19 @@ pauseBtn.addEventListener('click', togglePause);
 nextBtn.addEventListener('click', advanceToNext);
 stopBtn.addEventListener('click', stopAll);
 
-// === KEYBOARD SHORTCUTS ===
-document.addEventListener('keydown', (e) => {
-  // Ignore if typing in an input
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+// === KEYBOARD SHORTCUTS (desktop only) ===
+if (!('ontouchstart' in window)) {
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-  const overlayVisible = !overlay.classList.contains('hidden');
+    const overlayVisible = !overlay.classList.contains('hidden');
 
-  if (!overlayVisible) {
-    // Main screen shortcuts
-    if (e.key === 'Enter') { e.preventDefault(); spin(); }
-    if (e.key === 's' || e.key === 'S') { e.preventDefault(); startPresentations(); }
-  }
-});
+    if (!overlayVisible) {
+      if (e.key === 'Enter') { e.preventDefault(); spin(); }
+      if (e.key === 's' || e.key === 'S') { e.preventDefault(); startPresentations(); }
+    }
+  });
+}
 
 // === INIT ===
 drawWheel(0);
