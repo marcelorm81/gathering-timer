@@ -388,7 +388,7 @@ body {
 }
 
 .pres-clock {
-  font-size: 224px;
+  font-size: min(224px, 11vw);
   font-weight: 300;
   color: var(--amber);
   font-variant-numeric: tabular-nums;
@@ -398,6 +398,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .pres-status {
