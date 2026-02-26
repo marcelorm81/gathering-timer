@@ -251,7 +251,7 @@ body {
 
 /* === SPIN BUTTON — orange bg, white text, same shape as Start/Reset === */
 .spin-btn {
-  padding: 12px 32px;
+  padding: 12px 64px;
   font-size: 12px;
   letter-spacing: 1px;
   border-radius: 14px;
@@ -359,7 +359,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
 }
 
 /* Inset bevel card — squared, big area */
@@ -447,6 +446,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 16px;
+  padding-top: 20px;
   padding-bottom: 28px;
   width: 520px;
   margin: 0 auto;
@@ -684,14 +684,15 @@ body {
     width: 100%;
     flex-wrap: wrap;
     gap: 12px;
+    padding-top: 15px;
     padding-bottom: 20px;
   }
 
-  /* Skip + Pause side by side */
+  /* Skip + Pause side by side, double height */
   .pres-ctrl-btn {
     flex: 1;
     min-width: calc(50% - 8px);
-    padding: 14px 20px;
+    padding: 28px 20px;
     font-size: 12px;
   }
 
