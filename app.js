@@ -501,6 +501,20 @@ pauseBtn.addEventListener('click', togglePause);
 nextBtn.addEventListener('click', advanceToNext);
 stopBtn.addEventListener('click', stopAll);
 
+// === KEYBOARD SHORTCUTS ===
+document.addEventListener('keydown', (e) => {
+  // Ignore if typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  const overlayVisible = !overlay.classList.contains('hidden');
+
+  if (!overlayVisible) {
+    // Main screen shortcuts
+    if (e.key === 'Enter') { e.preventDefault(); spin(); }
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); startPresentations(); }
+  }
+});
+
 // === INIT ===
 drawWheel(0);
 updateInfo();
