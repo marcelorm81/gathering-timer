@@ -217,9 +217,7 @@ body {
   background: var(--bg);
   box-shadow:
     10px 10px 20px var(--shadow-d),
-    -10px -10px 20px var(--shadow-l),
-    inset 5px 5px 10px var(--shadow-d),
-    inset -5px -5px 10px var(--shadow-l);
+    -10px -10px 20px var(--shadow-l);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -230,26 +228,25 @@ body {
   border-radius: 50%;
 }
 
-/* === WHEEL POINTER — amber triangle with ticker pivot === */
+/* === WHEEL POINTER — thin flexible strip that bends === */
 .wheel-pointer {
   position: absolute;
-  top: 2px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  /* Pivot from the top so it swings like a real ticker */
+  /* Pivot from the very top so it bends like a reed */
   transform-origin: 50% 0%;
 }
 
 .wheel-pointer::after {
   content: '';
   display: block;
-  width: 0;
-  height: 0;
-  border-left: 11px solid transparent;
-  border-right: 11px solid transparent;
-  border-top: 24px solid var(--amber);
-  filter: drop-shadow(0 2px 4px rgba(180, 120, 30, 0.3));
+  width: 3px;
+  height: 30px;
+  background: var(--amber);
+  border-radius: 1.5px;
+  filter: drop-shadow(0 1px 3px rgba(180, 120, 30, 0.4));
 }
 
 /* === SPIN BUTTON — orange bg, white text, same shape as Start/Reset === */
@@ -570,15 +567,12 @@ body {
     overflow: hidden;
     box-shadow:
       8px 8px 16px var(--shadow-d),
-      -8px -8px 16px var(--shadow-l),
-      inset 4px 4px 8px var(--shadow-d),
-      inset -4px -4px 8px var(--shadow-l);
+      -8px -8px 16px var(--shadow-l);
   }
 
   .wheel-pointer::after {
-    border-left-width: 10px;
-    border-right-width: 10px;
-    border-top-width: 22px;
+    width: 3px;
+    height: 26px;
   }
 
   /* — Spin area: wide button at bottom — */
@@ -729,9 +723,7 @@ body {
     overflow: hidden;
     box-shadow:
       6px 6px 12px var(--shadow-d),
-      -6px -6px 12px var(--shadow-l),
-      inset 3px 3px 6px var(--shadow-d),
-      inset -3px -3px 6px var(--shadow-l);
+      -6px -6px 12px var(--shadow-l);
   }
 
   .spin-area {

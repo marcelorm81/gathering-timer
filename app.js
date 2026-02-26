@@ -132,8 +132,8 @@ let tickerTween = null;
 
 function tickPointer(speed) {
   // speed: 0 (slow) to 1 (fast) — controls deflection amount
-  const deflect = 8 + speed * 14; // 8°–22° swing based on speed
-  const dur = 0.08 + (1 - speed) * 0.06; // faster at high speed
+  const deflect = 18 + speed * 30; // 18°–48° heavy bend
+  const dur = 0.10 + (1 - speed) * 0.08; // snappy settle
 
   if (tickerTween) tickerTween.kill();
   tickerTween = gsap.fromTo(pointerEl,
