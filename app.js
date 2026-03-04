@@ -31,18 +31,21 @@ const sound = {
   done:    () => { beep(523, 200, 'square', 0.15); setTimeout(() => beep(659, 200, 'square', 0.15), 200); setTimeout(() => beep(784, 400, 'square', 0.15), 400); }
 };
 
-// === HAPTICS ===
+// === HAPTICS (web-haptics library — works on iOS Safari) ===
 const haptics = {
+  _ref: null,
   startBuzz() {
-    if (!navigator.vibrate) return;
-    // Repeating pattern: 100ms buzz, 30ms pause — loops for up to 8s
+    const wh = window.__haptics;
+    if (!wh) return;
+    // Long continuous buzz pattern for the spin duration
     const pattern = [];
-    for (let i = 0; i < 60; i++) pattern.push(100, 30);
-    navigator.vibrate(pattern);
+    for (let i = 0; i < 50; i++) pattern.push({ duration: 100, intensity: 1 });
+    wh.trigger(pattern);
   },
   stop() {
-    if (!navigator.vibrate) return;
-    navigator.vibrate(0);
+    const wh = window.__haptics;
+    if (!wh) return;
+    wh.cancel();
   }
 };
 

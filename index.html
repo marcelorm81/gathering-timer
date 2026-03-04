@@ -79,6 +79,10 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module">
+    import { WebHaptics } from 'https://esm.sh/web-haptics';
+    window.__haptics = new WebHaptics();
+  </script>
+  <script src="app.js" defer></script>
 </body>
 </html>
