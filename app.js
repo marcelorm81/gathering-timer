@@ -33,19 +33,25 @@ const sound = {
 
 // === HAPTICS (web-haptics library — works on iOS Safari) ===
 const haptics = {
-  _ref: null,
   startBuzz() {
     const wh = window.__haptics;
     if (!wh) return;
-    // Long continuous buzz pattern for the spin duration
-    const pattern = [];
-    for (let i = 0; i < 50; i++) pattern.push({ duration: 100, intensity: 1 });
-    wh.trigger(pattern);
+    wh.trigger([{ duration: 2500, intensity: 1 }]);
   },
   stop() {
     const wh = window.__haptics;
     if (!wh) return;
     wh.cancel();
+  },
+  success() {
+    const wh = window.__haptics;
+    if (!wh) return;
+    wh.trigger('success');
+  },
+  tap() {
+    const wh = window.__haptics;
+    if (!wh) return;
+    wh.trigger('medium');
   }
 };
 
@@ -299,6 +305,7 @@ function spin() {
     },
     onComplete() {
       haptics.stop();
+      haptics.success();
       wheelAngleDeg = targetTotal;
       spinning = false;
       updateSpinBtn();
@@ -513,13 +520,13 @@ function stopAll() {
 }
 
 // === EVENTS ===
-spinBtn.addEventListener('click', spin);
-startBtn.addEventListener('click', startPresentations);
-resetBtn.addEventListener('click', resetAll);
-skipBtn.addEventListener('click', skipPresenter);
-pauseBtn.addEventListener('click', togglePause);
-nextBtn.addEventListener('click', advanceToNext);
-stopBtn.addEventListener('click', stopAll);
+spinBtn.addEventListener('click', () => { haptics.tap(); spin(); });
+startBtn.addEventListener('click', () => { haptics.tap(); startPresentations(); });
+resetBtn.addEventListener('click', () => { haptics.tap(); resetAll(); });
+skipBtn.addEventListener('click', () => { haptics.tap(); skipPresenter(); });
+pauseBtn.addEventListener('click', () => { haptics.tap(); togglePause(); });
+nextBtn.addEventListener('click', () => { haptics.tap(); advanceToNext(); });
+stopBtn.addEventListener('click', () => { haptics.tap(); stopAll(); });
 
 // === KEYBOARD SHORTCUTS (desktop only) ===
 if (!('ontouchstart' in window)) {
