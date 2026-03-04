@@ -31,6 +31,21 @@ const sound = {
   done:    () => { beep(523, 200, 'square', 0.15); setTimeout(() => beep(659, 200, 'square', 0.15), 200); setTimeout(() => beep(784, 400, 'square', 0.15), 400); }
 };
 
+// === HAPTICS ===
+const haptics = {
+  startBuzz() {
+    if (!navigator.vibrate) return;
+    // Repeating pattern: 100ms buzz, 30ms pause — loops for up to 8s
+    const pattern = [];
+    for (let i = 0; i < 60; i++) pattern.push(100, 30);
+    navigator.vibrate(pattern);
+  },
+  stop() {
+    if (!navigator.vibrate) return;
+    navigator.vibrate(0);
+  }
+};
+
 // === STATE ===
 let pool = [];
 let queue = [];
@@ -241,6 +256,7 @@ function spin() {
 
   spinning = true;
   spinBtn.disabled = true;
+  haptics.startBuzz();
 
   const name = pickNext();
   const idx = NAMES.indexOf(name);
@@ -279,6 +295,7 @@ function spin() {
       }
     },
     onComplete() {
+      haptics.stop();
       wheelAngleDeg = targetTotal;
       spinning = false;
       updateSpinBtn();
