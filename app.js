@@ -7,9 +7,46 @@ const MAX_SLOTS = SESSION_MIN / SLOT_MIN;
 // === AUDIO ===
 let audioCtx = null;
 function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    preloadStopSound();  // kick off preload once context exists
+  }
   return audioCtx;
 }
+
+// Preload stop.mp3 as AudioBuffer so it plays in background tabs
+let stopSoundBuffer = null;
+function preloadStopSound() {
+  fetch('stop.mp3')
+    .then(r => r.arrayBuffer())
+    .then(buf => audioCtx.decodeAudioData(buf))
+    .then(decoded => { stopSoundBuffer = decoded; })
+    .catch(() => {});
+}
+function playStopSound() {
+  if (!stopSoundBuffer || !audioCtx) return;
+  const src = audioCtx.createBufferSource();
+  src.buffer = stopSoundBuffer;
+  src.connect(audioCtx.destination);
+  src.start();
+}
+
+// Inline Web Worker for background-safe ticking (not throttled)
+const timerWorker = new Worker(
+  URL.createObjectURL(new Blob([`
+    let ref = null;
+    onmessage = e => {
+      if (e.data === 'start') {
+        clearInterval(ref);
+        ref = setInterval(() => postMessage('tick'), 1000);
+      } else if (e.data === 'stop') {
+        clearInterval(ref);
+        ref = null;
+      }
+    };
+  `], { type: 'text/javascript' }))
+);
+timerWorker.onmessage = () => tick();
 
 function beep(freq, ms, wave = 'sine', vol = 0.25) {
   const ac = getAudioCtx();
@@ -63,7 +100,6 @@ let wheelAngleDeg = 0;
 
 let timerIdx = 0;
 let timerSec = 0;
-let timerRef = null;
 let paused = false;
 let warned = false;
 let deadlineMs = 0;   // wall-clock timestamp when timer hits 0
@@ -92,8 +128,7 @@ const nextEl    = $('up-next');
 const timesUpCanvas = $('times-up-canvas');
 const asciiSource   = $('ascii-source');
 const presCard      = $('pres-card');
-let stopAudio = null;
-let stopAudioLoop = null;  // interval for repeating stop.mp3
+let lastStopSoundAt = 0;   // timestamp of last stop sound play
 
 // === ASCII RENDERER — edit these to tweak the look ===
 const ASCII = {
@@ -516,14 +551,12 @@ function runPresenter() {
   // Hide ASCII overlay and stop audio from previous presenter
   stopAsciiOverlay();
   presCard.classList.remove('times-up');
-  if (stopAudioLoop) { clearInterval(stopAudioLoop); stopAudioLoop = null; }
-  if (stopAudio) { stopAudio.pause(); stopAudio = null; }
+  lastStopSoundAt = 0;
   timerTextEl.style.visibility = '';
   updateTimerUI();
   showUpNext();
 
-  clearInterval(timerRef);
-  timerRef = setInterval(tick, 1000);
+  timerWorker.postMessage('start');
 }
 
 function tick() {
@@ -547,25 +580,24 @@ function tick() {
     timerTextEl.classList.add('urgency-critical');
   }
 
-  if (timerSec <= 0) {
-    clearInterval(timerRef);
-    // Hide the 0:00 so the ASCII overlay is unobstructed
+  if (timerSec <= 0 && !presCard.classList.contains('times-up')) {
+    // First time hitting zero — fire the time's up sequence
     timerTextEl.style.visibility = 'hidden';
-    // Play stop.mp3 immediately, then repeat every 5s
-    stopAudio = new Audio('stop.mp3');
-    stopAudio.play().catch(() => {});
-    stopAudioLoop = setInterval(() => {
-      const a = new Audio('stop.mp3');
-      a.play().catch(() => {});
-    }, 5000);
+    playStopSound();
+    lastStopSoundAt = Date.now();
     statusEl.textContent = "time's up";
     statusEl.className = 'pres-status danger-text';
-    // Show ASCII overlay on the Game Boy screen
     startAsciiOverlay();
     presCard.classList.add('times-up');
     nextBtn.classList.remove('hidden');
     pauseBtn.disabled = true;
     skipBtn.disabled = true;
+  } else if (timerSec <= 0) {
+    // Already past zero — repeat sound every 5s (worker keeps ticking)
+    if (Date.now() - lastStopSoundAt >= 5000) {
+      playStopSound();
+      lastStopSoundAt = Date.now();
+    }
   }
 }
 
@@ -631,17 +663,16 @@ function advanceToNext() {
 }
 
 function skipPresenter() {
-  clearInterval(timerRef);
+  timerWorker.postMessage('stop');
   timerIdx++;
   runPresenter();
 }
 
 function stopAll() {
-  clearInterval(timerRef);
+  timerWorker.postMessage('stop');
   stopAsciiOverlay();
   presCard.classList.remove('times-up');
-  if (stopAudioLoop) { clearInterval(stopAudioLoop); stopAudioLoop = null; }
-  if (stopAudio) { stopAudio.pause(); stopAudio = null; }
+  lastStopSoundAt = 0;
   timerTextEl.style.visibility = '';
   overlay.classList.add('hidden');
 }
