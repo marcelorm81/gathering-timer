@@ -66,6 +66,8 @@ let timerSec = 0;
 let timerRef = null;
 let paused = false;
 let warned = false;
+let deadlineMs = 0;   // wall-clock timestamp when timer hits 0
+let pausedRemaining = 0; // ms remaining when paused
 
 // === DOM ===
 const $ = id => document.getElementById(id);
@@ -501,6 +503,7 @@ function runPresenter() {
 
   nameEl.textContent = queue[timerIdx];
   timerSec = SLOT_MIN * 60;
+  deadlineMs = Date.now() + timerSec * 1000;
   paused = false;
   warned = false;
   pauseBtn.textContent = 'Pause';
@@ -525,7 +528,8 @@ function runPresenter() {
 
 function tick() {
   if (paused) return;
-  timerSec--;
+  // Derive from wall clock so screen-lock / throttling can't drift
+  timerSec = Math.ceil((deadlineMs - Date.now()) / 1000);
   updateTimerUI();
 
   if (timerSec === 60 && !warned) {
@@ -599,11 +603,13 @@ function togglePause() {
   paused = !paused;
   pauseBtn.textContent = paused ? 'Resume' : 'Pause';
   if (paused) {
+    pausedRemaining = deadlineMs - Date.now();
     statusEl.textContent = 'paused';
     statusEl.className = 'pres-status';
     // Freeze the clock pulse while paused
     timerTextEl.classList.remove('urgency', 'urgency-critical');
   } else {
+    deadlineMs = Date.now() + pausedRemaining;
     if (timerSec <= 10) {
       statusEl.textContent = 'wrapping up';
       statusEl.className = 'pres-status danger-text';
