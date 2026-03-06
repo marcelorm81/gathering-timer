@@ -158,11 +158,12 @@ function startAsciiOverlay() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
 
-  // Responsive cols: keep cell ≥ fontSize so blocks don't squeeze on mobile
-  const cols = Math.min(ASCII.cols, Math.floor(w / ASCII.fontSize));
+  // Scale font on mobile so blocks are visible (min 6px on small screens)
+  const fs = w < 500 ? Math.max(6, ASCII.fontSize) : ASCII.fontSize;
+  const cols = Math.min(ASCII.cols, Math.floor(w / fs));
 
   // Measure actual character cell size so blocks tile perfectly
-  ctx.font = `${ASCII.fontSize}px 'Kode Mono', monospace`;
+  ctx.font = `${fs}px 'Kode Mono', monospace`;
   const cellW = w / cols;
   const cellH = cellW * 1.4;   // slightly taller than wide for blocks
   const rows  = Math.ceil(h / cellH);
@@ -181,13 +182,29 @@ function startAsciiOverlay() {
       return;
     }
 
+    // "Cover" crop: preserve video aspect ratio, fill the grid
+    const vw = asciiSource.videoWidth;
+    const vh = asciiSource.videoHeight;
+    const gridAspect = cols / rows;
+    const vidAspect  = vw / vh;
+    let sx = 0, sy = 0, sw = vw, sh = vh;
+    if (vidAspect > gridAspect) {
+      // video wider — crop sides
+      sw = vh * gridAspect;
+      sx = (vw - sw) / 2;
+    } else {
+      // video taller — crop top/bottom
+      sh = vw / gridAspect;
+      sy = (vh - sh) / 2;
+    }
+
     try {
-      // Sample the video frame at low resolution
-      asciiSampleCtx.drawImage(asciiSource, 0, 0, cols, rows);
+      // Sample the video frame with aspect-correct crop
+      asciiSampleCtx.drawImage(asciiSource, sx, sy, sw, sh, 0, 0, cols, rows);
       const pixels = asciiSampleCtx.getImageData(0, 0, cols, rows).data;
 
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${ASCII.fontSize}px 'Kode Mono', monospace`;
+      ctx.font = `${fs}px 'Kode Mono', monospace`;
       ctx.textBaseline = 'top';
 
       const chars = ASCII.chars;
