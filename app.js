@@ -182,10 +182,10 @@ function startAsciiOverlay() {
       return;
     }
 
-    // "Cover" crop: preserve video aspect ratio, fill the grid
+    // "Cover" crop: preserve video aspect ratio, fill the card
     const vw = asciiSource.videoWidth;
     const vh = asciiSource.videoHeight;
-    const gridAspect = cols / rows;
+    const gridAspect = w / h;    // card pixel ratio, not cell count ratio
     const vidAspect  = vw / vh;
     let sx = 0, sy = 0, sw = vw, sh = vh;
     if (vidAspect > gridAspect) {
