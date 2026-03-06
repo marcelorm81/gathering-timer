@@ -63,7 +63,8 @@
             </div>
             <div class="pres-status" id="timer-status"></div>
             <div class="pres-up-next" id="up-next"></div>
-            <video id="times-up-video" class="times-up-video hidden" src="stop-ascii.mp4" muted loop playsinline></video>
+            <canvas id="times-up-canvas" class="times-up-canvas hidden"></canvas>
+            <video id="ascii-source" src="stop.mp4" muted loop playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></video>
           </div>
         </div>
 

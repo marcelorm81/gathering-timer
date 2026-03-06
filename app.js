@@ -87,9 +87,105 @@ const pauseBtn  = $('pause-btn');
 const stopBtn   = $('stop-btn');
 const nextBtn   = $('next-btn');
 const nextEl    = $('up-next');
-const timesUpVideo = $('times-up-video');
-const presCard   = $('pres-card');
+const timesUpCanvas = $('times-up-canvas');
+const asciiSource   = $('ascii-source');
+const presCard      = $('pres-card');
 let stopAudio = null;
+let stopAudioLoop = null;  // interval for repeating stop.mp3
+
+// === ASCII RENDERER — edit these to tweak the look ===
+const ASCII = {
+  chars: '█▓▒░:· ',         // block ramp: dark → light (inverted)
+  cols:  120,                // character columns (more = finer detail)
+  fontSize: 5,               // px — controls cell size
+  color: '#2a4010',          // Game Boy dark green
+  contrast: 1.8,             // >1 = punchier
+  brightness: 5,             // added to each pixel (0–255)
+};
+
+let asciiRAF = null;
+const asciiSample = document.createElement('canvas');
+const asciiSampleCtx = asciiSample.getContext('2d', { willReadFrequently: true });
+
+function startAsciiOverlay() {
+  const card = presCard;
+  const w = card.offsetWidth;
+  const h = card.offsetHeight;
+  const dpr = window.devicePixelRatio || 1;
+  timesUpCanvas.width  = w * dpr;
+  timesUpCanvas.height = h * dpr;
+  timesUpCanvas.style.width  = w + 'px';
+  timesUpCanvas.style.height = h + 'px';
+
+  const ctx = timesUpCanvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+
+  // Responsive cols: keep cell ≥ fontSize so blocks don't squeeze on mobile
+  const cols = Math.min(ASCII.cols, Math.floor(w / ASCII.fontSize));
+
+  // Measure actual character cell size so blocks tile perfectly
+  ctx.font = `${ASCII.fontSize}px 'Kode Mono', monospace`;
+  const cellW = w / cols;
+  const cellH = cellW * 1.4;   // slightly taller than wide for blocks
+  const rows  = Math.ceil(h / cellH);
+
+  // Sampling canvas matches grid
+  asciiSample.width  = cols;
+  asciiSample.height = rows;
+
+  asciiSource.currentTime = 0;
+  asciiSource.play().catch(e => console.warn('ASCII video play failed:', e));
+  timesUpCanvas.classList.remove('hidden');
+
+  function renderFrame() {
+    if (!asciiSource.videoWidth) {
+      asciiRAF = requestAnimationFrame(renderFrame);
+      return;
+    }
+
+    try {
+      // Sample the video frame at low resolution
+      asciiSampleCtx.drawImage(asciiSource, 0, 0, cols, rows);
+      const pixels = asciiSampleCtx.getImageData(0, 0, cols, rows).data;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = `${ASCII.fontSize}px 'Kode Mono', monospace`;
+      ctx.textBaseline = 'top';
+
+      const chars = ASCII.chars;
+      const cLen = chars.length - 1;
+      const con = ASCII.contrast;
+      const bri = ASCII.brightness;
+
+      for (let r = 0; r < rows; r++) {
+        const y = r * cellH;
+        for (let c = 0; c < cols; c++) {
+          const i = (r * cols + c) * 4;
+          let lum = pixels[i] * 0.2126 + pixels[i + 1] * 0.7152 + pixels[i + 2] * 0.0722;
+          lum = Math.min(255, Math.max(0, (lum - 128) * con + 128 + bri));
+          const ci = Math.floor((lum / 255) * cLen);
+          // Vary opacity slightly per character for depth
+          const alpha = 0.5 + (ci / cLen) * 0.5;
+          ctx.fillStyle = `rgba(42, 64, 16, ${alpha})`;
+          ctx.fillText(chars[ci], c * cellW, y);
+        }
+      }
+    } catch (e) {
+      console.error('ASCII render error:', e);
+    }
+
+    asciiRAF = requestAnimationFrame(renderFrame);
+  }
+
+  asciiRAF = requestAnimationFrame(renderFrame);
+}
+
+function stopAsciiOverlay() {
+  if (asciiRAF) { cancelAnimationFrame(asciiRAF); asciiRAF = null; }
+  asciiSource.pause();
+  timesUpCanvas.classList.add('hidden');
+}
 
 // === HiDPI CANVAS SETUP ===
 let wheelSize = 400;
@@ -414,11 +510,12 @@ function runPresenter() {
   statusEl.textContent = '';
   statusEl.className = 'pres-status';
   timerTextEl.classList.remove('urgency', 'urgency-critical');
-  // Hide video and stop audio from previous presenter
-  timesUpVideo.classList.add('hidden');
-  timesUpVideo.pause();
+  // Hide ASCII overlay and stop audio from previous presenter
+  stopAsciiOverlay();
   presCard.classList.remove('times-up');
+  if (stopAudioLoop) { clearInterval(stopAudioLoop); stopAudioLoop = null; }
   if (stopAudio) { stopAudio.pause(); stopAudio = null; }
+  timerTextEl.style.visibility = '';
   updateTimerUI();
   showUpNext();
 
@@ -448,15 +545,19 @@ function tick() {
 
   if (timerSec <= 0) {
     clearInterval(timerRef);
-    // Play stop.mp3 instead of beep melody
+    // Hide the 0:00 so the ASCII overlay is unobstructed
+    timerTextEl.style.visibility = 'hidden';
+    // Play stop.mp3 immediately, then repeat every 5s
     stopAudio = new Audio('stop.mp3');
     stopAudio.play().catch(() => {});
+    stopAudioLoop = setInterval(() => {
+      const a = new Audio('stop.mp3');
+      a.play().catch(() => {});
+    }, 5000);
     statusEl.textContent = "time's up";
     statusEl.className = 'pres-status danger-text';
-    // Show ASCII video on the Game Boy screen
-    timesUpVideo.classList.remove('hidden');
-    timesUpVideo.currentTime = 0;
-    timesUpVideo.play().catch(() => {});
+    // Show ASCII overlay on the Game Boy screen
+    startAsciiOverlay();
     presCard.classList.add('times-up');
     nextBtn.classList.remove('hidden');
     pauseBtn.disabled = true;
@@ -531,10 +632,11 @@ function skipPresenter() {
 
 function stopAll() {
   clearInterval(timerRef);
-  timesUpVideo.classList.add('hidden');
-  timesUpVideo.pause();
+  stopAsciiOverlay();
   presCard.classList.remove('times-up');
+  if (stopAudioLoop) { clearInterval(stopAudioLoop); stopAudioLoop = null; }
   if (stopAudio) { stopAudio.pause(); stopAudio = null; }
+  timerTextEl.style.visibility = '';
   overlay.classList.add('hidden');
 }
 
