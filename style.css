@@ -379,17 +379,16 @@ body {
     inset -6px -6px 14px rgba(210, 240, 170, 0.5);
 }
 
-/* Time's up ASCII GIF overlay */
-.times-up-gif {
+/* Time's up ASCII video overlay */
+.times-up-video {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
   object-fit: cover;
-  mix-blend-mode: multiply;
-  opacity: 0.5;
+  mix-blend-mode: luminosity;
+  opacity: 0.8;
   pointer-events: none;
-  border-radius: 20px;
 }
 
 .pres-name {
@@ -460,6 +459,15 @@ body {
 
 .pres-clock.urgency-critical {
   animation: clockPulse 1s ease-in-out infinite;
+}
+
+/* Dim all card content when GIF is showing */
+.pres-card.times-up .pres-name,
+.pres-card.times-up .pres-clock,
+.pres-card.times-up .pres-status,
+.pres-card.times-up .pres-up-next,
+.pres-card.times-up .pres-progress-track {
+  opacity: 0.2;
 }
 
 .pres-up-next {

@@ -87,7 +87,8 @@ const pauseBtn  = $('pause-btn');
 const stopBtn   = $('stop-btn');
 const nextBtn   = $('next-btn');
 const nextEl    = $('up-next');
-const timesUpGif = $('times-up-gif');
+const timesUpVideo = $('times-up-video');
+const presCard   = $('pres-card');
 let stopAudio = null;
 
 // === HiDPI CANVAS SETUP ===
@@ -413,8 +414,10 @@ function runPresenter() {
   statusEl.textContent = '';
   statusEl.className = 'pres-status';
   timerTextEl.classList.remove('urgency', 'urgency-critical');
-  // Hide GIF and stop audio from previous presenter
-  timesUpGif.classList.add('hidden');
+  // Hide video and stop audio from previous presenter
+  timesUpVideo.classList.add('hidden');
+  timesUpVideo.pause();
+  presCard.classList.remove('times-up');
   if (stopAudio) { stopAudio.pause(); stopAudio = null; }
   updateTimerUI();
   showUpNext();
@@ -450,8 +453,11 @@ function tick() {
     stopAudio.play().catch(() => {});
     statusEl.textContent = "time's up";
     statusEl.className = 'pres-status danger-text';
-    // Show ASCII GIF on the Game Boy screen
-    timesUpGif.classList.remove('hidden');
+    // Show ASCII video on the Game Boy screen
+    timesUpVideo.classList.remove('hidden');
+    timesUpVideo.currentTime = 0;
+    timesUpVideo.play().catch(() => {});
+    presCard.classList.add('times-up');
     nextBtn.classList.remove('hidden');
     pauseBtn.disabled = true;
     skipBtn.disabled = true;
@@ -525,7 +531,9 @@ function skipPresenter() {
 
 function stopAll() {
   clearInterval(timerRef);
-  timesUpGif.classList.add('hidden');
+  timesUpVideo.classList.add('hidden');
+  timesUpVideo.pause();
+  presCard.classList.remove('times-up');
   if (stopAudio) { stopAudio.pause(); stopAudio = null; }
   overlay.classList.add('hidden');
 }
